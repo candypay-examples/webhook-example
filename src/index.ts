@@ -1,8 +1,8 @@
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import fs from "node:fs";
-
-import { Webhook } from "./lib/verify";
+import { send } from "@ayshptk/msngr";
+import { CandyPay } from "@candypay/checkout-sdk";
 
 dotenv.config();
 
@@ -15,23 +15,42 @@ app.post("/webhook", async (req: Request, res: Response) => {
   const payload = req.body;
   const signature = req.headers["x-candypay-signature"];
 
-  const webhook = new Webhook({
-    header: signature as string,
-    payload,
-    secret: process.env.WEBHOOK_SECRET!,
+  const candypay = new CandyPay({
+    api_key: process.env.CANDYPAY_API_KEY!,
+    network: "devnet",
+    config: {
+      collect_shipping_address: false,
+    },
   });
 
   try {
-    webhook.verify();
+    await candypay.webhook.verify({
+      payload,
+      signature: signature as string,
+      webhook_secret: process.env.WEBHOOK_SECRET!,
+    });
   } catch (err) {
     return res.status(400).json({
-      message: "invalid webhook signature",
+      message: "Invalid webhook signature",
     });
   }
 
-  fs.writeFileSync("events.log", payload.event, {
-    encoding: "utf-8",
-  });
+  fs.appendFileSync(
+    "events.log",
+    `\n [${Date.now()}]: ${payload.data.message}`,
+    {
+      encoding: "utf-8",
+    }
+  );
+
+  await send(
+    process.env.DISCORD_WEBHOOK_URL!,
+    `💸 New payment webhook alert - ${payload.data.message}`
+  );
 
   return res.send();
+});
+
+app.listen(3001, () => {
+  console.log(`web-h00ks`);
 });
