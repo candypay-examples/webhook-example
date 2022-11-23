@@ -35,10 +35,12 @@ app.post("/webhook", async (req: Request, res: Response) => {
     });
   }
 
-  fs.appendFileSync("events.log", `\n [${Date.now()}]: ${payload.signature}`, {
+  // stores the transaction signature in a `.log` file
+  fs.appendFileSync("events.log", `\n[${Date.now()}]: ${payload.signature}`, {
     encoding: "utf-8",
   });
 
+  // send a discord message via webhooks
   await send(
     process.env.DISCORD_WEBHOOK_URL!,
     `💸 New payment webhook alert - ${payload.signature}`
@@ -48,5 +50,5 @@ app.post("/webhook", async (req: Request, res: Response) => {
 });
 
 app.listen(3001, () => {
-  console.log(`web-h00ks`);
+  console.log(`i'm alive`);
 });
