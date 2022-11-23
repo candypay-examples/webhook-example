@@ -35,17 +35,13 @@ app.post("/webhook", async (req: Request, res: Response) => {
     });
   }
 
-  fs.appendFileSync(
-    "events.log",
-    `\n [${Date.now()}]: ${payload.data.message}`,
-    {
-      encoding: "utf-8",
-    }
-  );
+  fs.appendFileSync("events.log", `\n [${Date.now()}]: ${payload.signature}`, {
+    encoding: "utf-8",
+  });
 
   await send(
     process.env.DISCORD_WEBHOOK_URL!,
-    `💸 New payment webhook alert - ${payload.data.message}`
+    `💸 New payment webhook alert - ${payload.signature}`
   );
 
   return res.send();
