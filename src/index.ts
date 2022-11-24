@@ -11,6 +11,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.get("/", (_req: Request, res: Response) => {
+  return res.status(200).json({
+    message: "I'm alive!",
+  });
+});
+
 app.post("/webhook", async (req: Request, res: Response) => {
   const payload = req.body;
   const signature = req.headers["x-candypay-signature"];
@@ -49,6 +55,8 @@ app.post("/webhook", async (req: Request, res: Response) => {
   return res.send();
 });
 
-app.listen(3001, () => {
-  console.log(`i'm alive`);
+const port = 3000 || process.env.PORT;
+
+app.listen(3000, () => {
+  console.log(`The server is running on port ${port}`);
 });
