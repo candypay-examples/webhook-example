@@ -1,7 +1,6 @@
 import express, { Request, Response } from "express";
 import { CandyPay } from "@candypay/checkout-sdk";
 import { send } from "@ayshptk/msngr";
-import fs from "node:fs";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -11,13 +10,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.get("/", (_req: Request, res: Response) => {
-  return res.status(200).json({
-    message: "I'm alive!",
-  });
-});
-
-app.post("/webhook", async (req: Request, res: Response) => {
+app.post("/", async (req: Request, res: Response) => {
   const headers = req.headers;
   const payload = req.body;
 
@@ -31,7 +24,7 @@ app.post("/webhook", async (req: Request, res: Response) => {
 
   try {
     await candypay.webhook.verify({
-      payload,
+      payload: JSON.stringify(payload),
       headers: headers as Record<string, string>,
       webhook_secret: process.env.WEBHOOK_SECRET!,
     });
@@ -41,22 +34,17 @@ app.post("/webhook", async (req: Request, res: Response) => {
     });
   }
 
-  // stores the transaction signature in a `.log` file
-  fs.appendFileSync("events.log", `\n[${Date.now()}]: ${payload.signature}`, {
-    encoding: "utf-8",
-  });
-
   // send a discord message via webhooks
   await send(
     process.env.DISCORD_WEBHOOK_URL!,
-    `💸 New payment webhook alert - ${payload.signature}`
+    `💸 New payment webhook alert - https://explorer.solana.com/tx/${payload.signature}`
   );
 
   return res.send();
 });
 
-const port = 3000 || process.env.PORT;
+const port = process.env.PORT || 3000;
 
-app.listen(3000, () => {
+app.listen(port, () => {
   console.log(`The server is running on port ${port}`);
 });
