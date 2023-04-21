@@ -31,7 +31,9 @@ app.post("/", async (req: Request, res: Response) => {
     `💸 New payment webhook alert - https://explorer.solana.com/tx/${payload.signature}`
   );
 
-  return res.send();
+   return res.status(200).json({
+      message: "Notification sent",
+    });
 });
 
 const port = process.env.PORT || 3000;
